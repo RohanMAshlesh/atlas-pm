@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  atlas:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - DEFAULT_MODEL=${DEFAULT_MODEL:-anthropic/claude-sonnet-4}
+      - SEARCH_PROVIDER=${SEARCH_PROVIDER:-none}
+      - SEARCH_API_KEY=${SEARCH_API_KEY}
+    volumes:
+      - atlas_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  atlas_data:
