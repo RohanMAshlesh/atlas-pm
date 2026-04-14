@@ -139,7 +139,6 @@ const TABLES = [
     project_id TEXT REFERENCES projects(id) ON DELETE CASCADE,
     role TEXT NOT NULL,
     content TEXT NOT NULL,
-    "references" TEXT DEFAULT '[]',
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`,
   `CREATE TABLE IF NOT EXISTS phases (

@@ -18,7 +18,6 @@ export async function POST(request: Request) {
     project_id,
     role: "user",
     content: message,
-    references: "[]",
     created_at: new Date().toISOString(),
   }).run();
 
@@ -81,7 +80,6 @@ export async function POST(request: Request) {
           project_id,
           role: "assistant",
           content: fullContent,
-          references: "[]",
           created_at: new Date().toISOString(),
         }).run();
 

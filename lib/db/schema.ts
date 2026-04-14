@@ -144,7 +144,6 @@ export const chat_messages = sqliteTable("chat_messages", {
   project_id: text("project_id").references(() => projects.id),
   role: text("role").notNull(),
   content: text("content").notNull(),
-  references: text("references").default("[]"), // JSON
   created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
