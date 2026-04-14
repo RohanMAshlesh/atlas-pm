@@ -9,9 +9,9 @@ export async function GET() {
     const db = await getDb();
     const allProjects = await db.select().from(projects).orderBy(desc(projects.created_at)).all();
     return NextResponse.json(allProjects);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching projects:", error);
-    return NextResponse.json({ error: "Failed to fetch projects" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch projects", detail: error?.message }, { status: 500 });
   }
 }
 
@@ -40,8 +40,8 @@ export async function POST(request: Request) {
 
     const project = await db.select().from(projects).where(eq(projects.id, id)).get();
     return NextResponse.json(project, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating project:", error);
-    return NextResponse.json({ error: "Failed to create project" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create project", detail: error?.message }, { status: 500 });
   }
 }

@@ -162,11 +162,16 @@ async function initializeSchema(): Promise<void> {
   if (initPromise) return initPromise;
 
   initPromise = (async () => {
-    await client.batch(
-      TABLES.map((sql) => ({ sql, args: [] })),
-      "write"
-    );
-    schemaInitialized = true;
+    try {
+      await client.batch(
+        TABLES.map((sql) => ({ sql, args: [] })),
+        "write"
+      );
+      schemaInitialized = true;
+    } catch (e) {
+      initPromise = null; // reset so next request retries
+      throw e;
+    }
   })();
 
   return initPromise;
