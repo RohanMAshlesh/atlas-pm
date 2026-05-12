@@ -162,13 +162,12 @@ async function initializeSchema(): Promise<void> {
 
   initPromise = (async () => {
     try {
-      await client.batch(
-        TABLES.map((sql) => ({ sql, args: [] })),
-        "write"
-      );
+      for (const sql of TABLES) {
+        await client.execute(sql);
+      }
       schemaInitialized = true;
     } catch (e) {
-      initPromise = null; // reset so next request retries
+      initPromise = null;
       throw e;
     }
   })();
