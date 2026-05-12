@@ -22,8 +22,10 @@ export default function NewProjectPage() {
         body: JSON.stringify(form),
       });
       const p = await res.json();
-      if (p.id) { toast({ title: "Project created!", variant: "success" }); router.push(`/projects/${p.id}`); }
-    } catch { toast({ title: "Failed", variant: "error" }); }
+      if (!res.ok) throw new Error(p.error || "Failed to create project");
+      toast({ title: "Project created!", variant: "success" });
+      router.push(`/projects/${p.id}`);
+    } catch (err: unknown) { toast({ title: err instanceof Error ? err.message : "Failed to create project", variant: "error" }); }
     finally { setLoading(false); }
   };
 
