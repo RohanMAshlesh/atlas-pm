@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Zap, RefreshCw, Download, ChevronDown, ChevronUp, Edit3, Check, X } from "lucide-react";
 import { toast } from "@/components/ui/toaster";
+import { ScopedChatBubble } from "@/components/chat/ScopedChatBubble";
 
 interface PRDSection {
   title: string;
@@ -208,9 +209,17 @@ export default function PRDPage() {
 
               return (
                 <div key={sectionKey} className="section-card">
-                  <button
+                  <div
+                    role="button"
+                    tabIndex={0}
                     className="section-card-header"
                     onClick={() => !isEditing && toggleSection(sectionKey)}
+                    onKeyDown={(e) => {
+                      if (!isEditing && (e.key === "Enter" || e.key === " ")) {
+                        e.preventDefault();
+                        toggleSection(sectionKey);
+                      }
+                    }}
                   >
                     <span style={{ fontSize: "14px", fontWeight: 500, color: "var(--tx-1)" }}>{section.title}</span>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }} onClick={(e) => e.stopPropagation()}>
@@ -242,7 +251,7 @@ export default function PRDPage() {
                         : <ChevronDown style={{ width: "16px", height: "16px", color: "var(--tx-3)" }} />
                       }
                     </div>
-                  </button>
+                  </div>
 
                   {isExpanded && (
                     <div className="section-card-body">
@@ -279,6 +288,12 @@ export default function PRDPage() {
           </div>
         )}
       </div>
+
+      <ScopedChatBubble
+        projectId={id}
+        context={{ type: "prd" }}
+        onApplied={() => fetchPRD()}
+      />
     </div>
   );
 }
