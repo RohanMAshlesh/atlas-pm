@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { toast } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
+import { ScopedChatBubble } from "@/components/chat/ScopedChatBubble";
 
 interface Task {
   id: string;
@@ -90,6 +91,8 @@ export default function BacklogPage() {
   const [generatingEpics, setGeneratingEpics] = useState(false);
   const [generatingStories, setGeneratingStories] = useState<string | null>(null);
   const [generatingTasks, setGeneratingTasks] = useState<string | null>(null);
+  const [generatingFull, setGeneratingFull] = useState(false);
+  const [fullProgress, setFullProgress] = useState<string | null>(null);
   const [expandedEpics, setExpandedEpics] = useState<Set<string>>(new Set());
   const [expandedStories, setExpandedStories] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<ViewMode>("list");
@@ -165,6 +168,58 @@ export default function BacklogPage() {
       );
     } catch { toast({ title: "Failed to generate stories", variant: "error" }); }
     finally { setGeneratingStories(null); }
+  };
+
+  const generateFullBacklog = async () => {
+    setGeneratingFull(true);
+    setFullProgress("Starting...");
+    try {
+      const res = await fetch("/api/ai/full-backlog", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ project_id: id }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Request failed" }));
+        toast({ title: err.error || "Failed to start generation", variant: "error" });
+        return;
+      }
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const data = JSON.parse(line.slice(6));
+            if (data.error) {
+              toast({ title: data.error, variant: "error" });
+              continue;
+            }
+            if (data.stage === "epics" && data.status === "start") setFullProgress("Generating epics...");
+            if (data.stage === "epics" && data.status === "done") setFullProgress(`${data.count} epics created. Generating stories...`);
+            if (data.stage === "stories" && data.status === "start") setFullProgress(`Stories for "${data.epic?.title}"...`);
+            if (data.stage === "stories" && data.status === "done") setFullProgress(`${data.count} stories for "${data.epic?.title}"`);
+            if (data.stage === "tasks" && data.status === "start") setFullProgress(`Tasks for "${data.story?.title}"...`);
+            if (data.done) {
+              const s = data.summary || {};
+              toast({ title: `Backlog generated: ${s.epics} epics, ${s.stories} stories, ${s.tasks} tasks`, variant: "success" });
+              fetchBacklog();
+            }
+          } catch {}
+        }
+      }
+    } catch (e) {
+      toast({ title: e instanceof Error ? e.message : "Failed to generate backlog", variant: "error" });
+    } finally {
+      setGeneratingFull(false);
+      setFullProgress(null);
+    }
   };
 
   const generateTasks = async (storyId: string) => {
@@ -272,12 +327,27 @@ export default function BacklogPage() {
                 <button onClick={exportJSON} className="btn btn-secondary" style={{ fontSize: "0.75rem" }}>JSON</button>
               </div>
             )}
-            <button onClick={generateEpics} disabled={generatingEpics} className="btn btn-primary" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              {generatingEpics
-                ? <><span className="dot-pulse" /> Generating...</>
-                : <><Zap style={{ width: "1rem", height: "1rem" }} /> {epics.length ? "Regen Epics" : "Generate Backlog"}</>
-              }
-            </button>
+            {epics.length === 0 ? (
+              <button
+                onClick={generateFullBacklog}
+                disabled={generatingFull}
+                className="btn btn-primary"
+                style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+                title="Generate epics, stories, and tasks in one pass"
+              >
+                {generatingFull
+                  ? <><span className="dot-pulse" /> {fullProgress || "Generating..."}</>
+                  : <><Zap style={{ width: "1rem", height: "1rem" }} /> Generate Full Backlog</>
+                }
+              </button>
+            ) : (
+              <button onClick={generateEpics} disabled={generatingEpics} className="btn btn-primary" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                {generatingEpics
+                  ? <><span className="dot-pulse" /> Generating...</>
+                  : <><Zap style={{ width: "1rem", height: "1rem" }} /> Regen Epics</>
+                }
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -570,6 +640,12 @@ export default function BacklogPage() {
           </div>
         )}
       </div>
+
+      <ScopedChatBubble
+        projectId={id}
+        context={{ type: "backlog" }}
+        onApplied={() => fetchBacklog()}
+      />
     </div>
   );
 }
