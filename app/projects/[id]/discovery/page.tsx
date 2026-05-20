@@ -151,6 +151,9 @@ export default function DiscoveryPage() {
               {uploading ? "Uploading..." : "Drop files here or click to upload"}
             </p>
             <p style={{ fontSize: "12px", color: "var(--tx-4)" }}>PDF, DOCX, TXT, MD, SRT, VTT, CSV, images</p>
+            <p style={{ fontSize: "11px", color: "var(--tx-4)", marginTop: "6px" }}>
+              Heads up: parsed text is stored in your Atlas database and will be sent to your configured AI provider when you run synthesis.
+            </p>
             <input
               ref={fileRef}
               type="file"
