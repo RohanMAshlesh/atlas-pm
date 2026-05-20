@@ -168,7 +168,7 @@ export default function Dashboard() {
         {/* Privacy notice */}
         <div style={{ marginTop: "48px", paddingTop: "24px", borderTop: "1px solid var(--bd-1)", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
           <Lock size={11} style={{ color: "var(--tx-4)" }} />
-          <p style={{ fontSize: "11px", color: "var(--tx-4)" }}>Your data stays on your machine. Only AI API calls leave this device.</p>
+          <p style={{ fontSize: "11px", color: "var(--tx-4)" }}>Project data is stored in your Atlas database. Uploaded documents are sent to your configured AI provider (default: OpenRouter) when you run synthesis or generate a PRD. No third-party analytics or tracking.</p>
         </div>
       </div>
     </div>
